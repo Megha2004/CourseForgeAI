@@ -1,0 +1,14 @@
+duckduckgo-search
+phidata 
+python-dotenv
+yfinance
+packaging
+google-generativeai
+streamlit
+onnxruntime
+agno
+google-genai
+flask
+lancedb
+chromadb
+pdfkit

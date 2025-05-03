@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📝 Problem Statement Generator & Code Evaluator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Problem Statement Generator & Code Evaluator</h1>
+    <p>Enter a topic to generate a Python programming problem statement!</p>
+
+    <div class="section">
+      <h2>Generate Problem Statement</h2>
+      <div class="input-section">
+        <label for="topic">Enter Topic:</label>
+        <input type="text" id="topic" placeholder="e.g., Stack, Queue, Binary Search, etc.">
+        <button onclick="generateProblem()">🚀 Generate Problem</button>
+      </div>
+    </div>
+
+    <div id="problemBox" class="response-box">
+      <div id="problemContent">
+        <!-- Problem statement will be displayed here -->
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Submit Your Solution</h2>
+      <div class="input-section">
+        <label for="codeFile">Upload Python File:</label>
+        <input type="file" id="codeFile" accept=".py">
+        <button onclick="evaluateCode()">✅ Evaluate Code</button>
+      </div>
+    </div>
+
+    <div id="evaluationBox" class="response-box">
+      <div id="evaluationContent">
+        <!-- Evaluation results will be displayed here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function generateProblem() {
+      const topic = document.getElementById("topic").value.trim();
+      const problemBox = document.getElementById("problemBox");
+      const problemContent = document.getElementById("problemContent");
+
+      if (!topic) {
+        problemContent.innerHTML = '<p class="error">❌ Please enter a topic.</p>';
+        return;
+      }
+
+      // Show loading state
+      problemContent.innerHTML = '<p>🔍 Generating problem statement...</p>';
+
+      try {
+        const response = await fetch("/generate_problem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'An error occurred');
+        }
+
+        // Format the problem statement
+        const formattedProblem = data.problem
+          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')  // Convert markdown bold to HTML
+          .replace(/\n/g, '<br>');  // Convert newlines to HTML line breaks
+
+        problemContent.innerHTML = formattedProblem;
+      } catch (error) {
+        console.error("Error:", error);
+        problemContent.innerHTML = `
+          <p class="error">❌ Error: ${error.message}</p>
+        `;
+      }
+    }
+
+    async function evaluateCode() {
+      const fileInput = document.getElementById("codeFile");
+      const evaluationBox = document.getElementById("evaluationBox");
+      const evaluationContent = document.getElementById("evaluationContent");
+
+      if (!fileInput.files.length) {
+        evaluationContent.innerHTML = '<p class="error">❌ Please select a Python file to upload.</p>';
+        return;
+      }
+
+      const file = fileInput.files[0];
+      if (!file.name.endsWith('.py')) {
+        evaluationContent.innerHTML = '<p class="error">❌ Please upload a Python (.py) file.</p>';
+        return;
+      }
+
+      evaluationContent.innerHTML = '<p>🔍 Evaluating your code...</p>';
+
+      const formData = new FormData();
+      formData.append('code', file);
+
+      try {
+        const response = await fetch("/evaluate_code", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'An error occurred');
+        }
+
+        const formattedEvaluation = data.evaluation
+          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+          .replace(/\n/g, '<br>');
+
+        evaluationContent.innerHTML = formattedEvaluation;
+      } catch (error) {
+        console.error("Error:", error);
+        evaluationContent.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html> 

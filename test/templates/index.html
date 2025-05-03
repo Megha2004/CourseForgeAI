@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📘 AI Academic Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .response-box {
+      background-color: #f8f9fa;
+      border: 2px solid #D8BFD8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      color: #4B0082;
+    }
+
+    .response-content {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+    }
+
+    .response-content h3 {
+      color: #4B0082;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+    }
+
+    .response-content p {
+      margin-bottom: 15px;
+    }
+
+    .response-content ul {
+      list-style-type: disc;
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    .response-content li {
+      margin-bottom: 8px;
+    }
+
+    .response-content code {
+      background-color: #f0f0f0;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .response-content pre {
+      background-color: #f0f0f0;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+
+    .response-content strong {
+      color: #4B0082;
+      font-weight: bold;
+    }
+
+    .loading {
+      color: #4B0082;
+      font-style: italic;
+    }
+
+    .error {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .nav-icon {
+      position: absolute;
+      left: 0;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <a href="{{ url_for('home') }}" class="nav-icon" title="Home">
+        <i class="fas fa-home"></i>
+      </a>
+      <h1>📚 AI Academic Assistant</h1>
+    </div>
+
+    <p>Ask anything from the loaded textbooks!</p>
+
+    <div class="input-section">
+      <label for="subject">Choose a subject:</label>
+      <select id="subject">
+        <option value="bigdata">Big Data Analytics</option>
+        <option value="deeplearning">Deep Learning</option>
+        <option value="machinelearning">Machine Learning</option>
+        <option value="TSA">Text & Speech Analysis</option>
+        <option value="FDSA">Fundamentals of Data Science & Analytics</option>
+        <option value="MDA">Multivariate Data Analysis</option>
+      </select>
+
+      <textarea id="question" rows="4" placeholder="Type your question here..."></textarea>
+      <button onclick="sendQuestion()">🚀 Get Answer</button>
+    </div>
+
+    <div id="answerBox" class="response-box">
+      <div id="answerContent" class="response-content">
+        <!-- Answer will be displayed here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function sendQuestion() {
+      const question = document.getElementById("question").value.trim();
+      const subject = document.getElementById("subject").value;
+      const answerContent = document.getElementById("answerContent");
+
+      if (!question) {
+        answerContent.innerHTML = '<p class="error">❌ Please enter a question.</p>';
+        return;
+      }
+
+      // Show loading state
+      answerContent.innerHTML = '<p class="loading">🔍 Searching for answers...</p>';
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, subject })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.answer || 'An error occurred');
+        }
+
+        // Format the answer with proper HTML
+        const formattedAnswer = data.answer
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Convert markdown bold to HTML
+          .replace(/\n/g, '<br>')  // Convert newlines to HTML line breaks
+          .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')  // Convert code blocks
+          .replace(/`(.*?)`/g, '<code>$1</code>')  // Convert inline code
+          .replace(/^## (.*?)$/gm, '<h3>$1</h3>')  // Convert headings
+          .replace(/^• (.*?)$/gm, '<li>$1</li>')  // Convert bullet points
+          .replace(/<li>.*?<\/li>/g, function(match) {  // Wrap consecutive list items in ul
+            if (!answerContent.innerHTML.includes('<ul>')) {
+              return '<ul>' + match;
+            }
+            return match;
+          })
+          .replace(/<\/li>(?!<li>)/g, '</li></ul>');  // Close ul tags
+
+        answerContent.innerHTML = formattedAnswer;
+      } catch (error) {
+        console.error("Error:", error);
+        answerContent.innerHTML = `
+          <p class="error">❌ Error: ${error.message}</p>
+        `;
+      }
+    }
+  </script>
+</body>
+</html> 

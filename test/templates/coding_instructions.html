@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Coding Assistant - Instructions</title>
+    <style>
+        .instructions-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .rule-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #4B0082;
+            background-color: #f8f9fa;
+        }
+        .warning-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            background-color: #fff5f5;
+        }
+        .start-button {
+            background: #4B0082;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+        .start-button:hover {
+            background: #5B1A8E;
+            transform: translateY(-2px);
+        }
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header-container h1 {
+            margin: 0;
+            text-align: center;
+        }
+
+        .nav-icon {
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="{{ url_for('home') }}" class="nav-icon" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <h1>💻 Coding Assistant - Instructions</h1>
+        </div>
+
+        <div class="instructions-container">
+            <h2>Coding Test Instructions</h2>
+
+            <h3 class="mb-3">Rules & Guidelines</h3>
+            
+            <div class="rule-item">
+                <h5>1. Code Submission</h5>
+                <p>Write your code in the provided editor. You can run your code to test it before submission.</p>
+            </div>
+
+            <div class="rule-item">
+                <h5>2. Language Support</h5>
+                <p>You can write code in Python. Select your preferred language from the dropdown menu.</p>
+            </div>
+
+            <div class="rule-item">
+                <h5>3. Evaluation Process</h5>
+                <p>Your code will be evaluated based on:
+                    <ul>
+                        <li>Correctness of the solution</li>
+                        <li>Code efficiency</li>
+                        <li>Code readability and structure</li>
+                    </ul>
+                </p>
+            </div>
+
+            <h3 class="mb-3 mt-4">Important Warnings</h3>
+
+            <div class="warning-item">
+                <h5>1. Copy-Paste Prevention</h5>
+                <p>Copying and pasting code is strictly prohibited. The system will detect and warn against any copy-paste attempts.</p>
+            </div>
+
+            <div class="warning-item">
+                <h5>2. Tab Switching</h5>
+                <p>Switching to other tabs or applications is not allowed. The system monitors your activity and will issue warnings for tab switching.</p>
+            </div>
+
+            <div class="warning-item">
+                <h5>3. Warning System</h5>
+                <p>You will receive warnings for:
+                    <ul>
+                        <li>Copy-paste attempts</li>
+                        <li>Tab switching</li>
+                        <li>Extended periods of inactivity</li>
+                    </ul>
+                    After 2 warnings, the test will automatically end.
+                </p>
+            </div>
+
+            <div class="text-center">
+                <a href="{{ url_for('coding') }}" class="start-button">Start Test</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

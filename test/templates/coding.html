@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <title>Coding Assistant</title>
+    <style>
+        .code-editor-container {
+            width: 100%;
+            margin: 20px 0;
+            border: 2px solid #D8BFD8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            background: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #D8BFD8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .language-selector {
+            padding: 5px 10px;
+            border: 1px solid #D8BFD8;
+            border-radius: 4px;
+            background: white;
+            color: #4B0082;
+        }
+
+        .CodeMirror {
+            height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .run-button {
+            background: #4B0082;
+            color: white;
+        }
+
+        .run-button:hover {
+            background: #5B1A8E;
+        }
+
+        .clear-button {
+            background: #f8f9fa;
+            color: #4B0082;
+            border: 1px solid #D8BFD8;
+        }
+
+        .clear-button:hover {
+            background: #f0f0f0;
+        }
+
+        .output-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #D8BFD8;
+            border-radius: 8px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .output-title {
+            color: #4B0082;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .error-output {
+            color: #dc3545;
+        }
+
+        .success-output {
+            color: #28a745;
+        }
+
+        .problem-statement {
+            background: #f8f9fa;
+            padding: 20px;
+            border: 2px solid #D8BFD8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .problem-section {
+            margin-bottom: 15px;
+        }
+
+        .problem-section h3 {
+            color: #4B0082;
+            margin-bottom: 10px;
+        }
+
+        .output-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #D8BFD8;
+            border-radius: 8px;
+        }
+
+        .output-section h3 {
+            color: #4B0082;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px solid #D8BFD8;
+            padding-bottom: 8px;
+        }
+
+        .output-section pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .attempt-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #4B0082;
+            border: 1px solid #D8BFD8;
+        }
+
+        .evaluation-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid #D8BFD8;
+            border-radius: 8px;
+        }
+
+        .evaluation-section h3 {
+            color: #4B0082;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #D8BFD8;
+            padding-bottom: 8px;
+        }
+
+        .evaluation-content {
+            line-height: 1.6;
+            color: #333;
+            font-size: 1em;
+            margin-top: 15px;
+        }
+
+        .evaluation-content p {
+            margin-bottom: 10px;
+            padding-left: 15px;
+            border-left: 3px solid #D8BFD8;
+        }
+
+        .solution-button {
+            background: #4B0082;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: none;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+
+        .solution-button.enabled {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .solution-button:disabled {
+            cursor: not-allowed;
+        }
+
+        .solution-content {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid #D8BFD8;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .solution-content h3 {
+            color: #4B0082;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #D8BFD8;
+            padding-bottom: 8px;
+        }
+
+        .solution-text {
+            line-height: 1.6;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .solution-text pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        /* Add new styles for warnings */
+        .warning-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .warning-modal h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        .warning-count {
+            display: none;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .instructions-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .rule-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #4B0082;
+            background-color: #f8f9fa;
+        }
+        .warning-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            background-color: #fff5f5;
+        }
+        .timer-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header-container h1 {
+            margin: 0;
+            text-align: center;
+        }
+
+        .nav-icon {
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Check if test has been started
+        if (!localStorage.getItem('testStarted')) {
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('instructionsSection').style.display = 'block';
+        } else {
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('instructionsSection').style.display = 'none';
+        }
+
+        // Handle start test button
+        document.getElementById('startTest').addEventListener('click', function() {
+            localStorage.setItem('testStarted', 'true');
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('instructionsSection').style.display = 'none';
+            // Initialize the editor with default Python code
+            editor.setValue(defaultCode.python);
+        });
+    </script>
+
+    <script>
+        // Check if instructions have been read
+        if (!localStorage.getItem('hasReadInstructions')) {
+            window.location.href = '/coding_instructions';
+        }
+    </script>
+
+    <!-- Add warning modal and overlay -->
+    <div class="overlay" id="overlay"></div>
+    <div class="warning-modal" id="warningModal">
+        <h3>⚠️ Warning!</h3>
+        <p id="warningMessage"></p>
+        <button onclick="closeWarning()" class="action-button run-button">I Understand</button>
+    </div>
+    <div class="warning-count" id="warningCount">Warnings: 0/2</div>
+
+    <div class="container">
+        <div class="header-container">
+            <a href="{{ url_for('home') }}" class="nav-icon" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <h1>💻 Coding Assistant</h1>
+        </div>
+
+        <p>Practice coding with our interactive problem-solving environment!</p>
+
+        <!-- Problem Statement Section -->
+        <div class="section">
+            <h2>Generate Problem Statement</h2>
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="topic">Enter Topic:</label>
+                    <input type="text" id="topic" placeholder="Enter a topic for problem statement...">
+                </div>
+                <button onclick="generateProblem()" class="submit-btn">Generate Problem</button>
+            </div>
+        </div>
+
+        <div id="problemBox" class="section">
+            <h2>Problem Statement</h2>
+            <div class="problem-statement">
+                <div id="problemContent" class="response-content">
+                    <!-- Problem statement will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Editor Section -->
+        <div class="section">
+            <h2>Your Solution</h2>
+            <div class="code-editor-container">
+                <div class="editor-header">
+                    <select id="language" class="language-selector">
+                        <option value="python">Python</option>
+                    </select>
+                    <div class="editor-actions">
+                        <button class="action-button run-button" onclick="runCode()">
+                            <i class="fas fa-play"></i> Run Code
+                        </button>
+                        <button class="action-button clear-button" onclick="clearCode()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                        <button class="action-button run-button" onclick="evaluateSolution()">
+                            <i class="fas fa-check"></i> Submit Solution
+                        </button>
+                    </div>
+                </div>
+                <textarea id="editor"></textarea>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Output</h2>
+            <div class="output-container">
+                <div class="output-title">Console Output:</div>
+                <div id="output"></div>
+            </div>
+        </div>
+
+        <!-- Evaluation Section -->
+        <div class="section">
+            <h2>Evaluation Results</h2>
+            <div class="evaluation-section">
+                <div id="evaluationContent" class="evaluation-result">
+                    <!-- Evaluation results will be displayed here -->
+                </div>
+                <button id="solutionButton" class="solution-button" onclick="showSolution()">
+                    <i class="fas fa-lightbulb"></i> View Solution
+                </button>
+                <div id="solutionContent" class="solution-content">
+                    <!-- Solution will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script>
+        // Add anti-cheating variables
+        let warningCount = 0;
+        let isTestActive = true;
+        let lastFocusTime = Date.now();
+        let lastPasteTime = 0;
+        let isInternalPaste = false;
+        let lastCopiedText = '';
+
+        // Add solution-related variables
+        let wrongAttempts = 0;
+        let currentSolution = '';
+        let isSolutionEnabled = false;
+
+        // Initialize CodeMirror with paste prevention
+        const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+            mode: "python",
+            theme: "monokai",
+            lineNumbers: true,
+            indentUnit: 4,
+            smartIndent: true,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "Ctrl-V": function() { return false; }, // Prevent Ctrl+V
+                "Cmd-V": function() { return false; }   // Prevent Cmd+V on Mac
+            }
+        });
+
+        // Enhanced paste detection
+        editor.on("paste", function(cm, e) {
+            // Check if this is an internal paste (from within the editor)
+            if (isInternalPaste) {
+                isInternalPaste = false;
+                return;
+            }
+
+            // Prevent all external pasting
+            showWarning("Copy-pasting from external sources is not allowed!");
+            e.preventDefault();
+            return false;
+        });
+
+        // Handle internal copy/paste
+        editor.on("copy", function(cm, e) {
+            const selectedText = cm.getSelection();
+            if (selectedText) {
+                lastCopiedText = selectedText;
+                isInternalPaste = true;
+            }
+        });
+
+        // Prevent right-click paste
+        editor.on("contextmenu", function(cm, e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Prevent drag and drop
+        editor.on("dragstart", function(cm, e) {
+            e.preventDefault();
+            return false;
+        });
+
+        editor.on("drop", function(cm, e) {
+            e.preventDefault();
+            showWarning("Drag and drop is not allowed!");
+            return false;
+        });
+
+        // Track tab switching
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                const timeAway = Date.now() - lastFocusTime;
+                const problemContent = document.getElementById("problemContent").innerHTML.trim();
+                // Only warn if:
+                // 1. Away for more than 1 second
+                // 2. Problem content exists
+                // 3. Not in the process of generating problem statement
+                // 4. Not showing the initial empty state
+                if (timeAway > 1000 && 
+                    problemContent !== "" && 
+                    !problemContent.includes("🔍 Generating problem statement...") &&
+                    !problemContent.includes("<!-- Problem statement will be displayed here -->")) {
+                    showWarning("Switching tabs is not allowed!");
+                }
+            } else {
+                lastFocusTime = Date.now();
+            }
+        });
+
+        // Track window focus
+        window.addEventListener('focus', function() {
+            lastFocusTime = Date.now();
+        });
+
+        // Show warning function
+        function showWarning(message) {
+            if (!isTestActive) return;
+
+            warningCount++;
+            document.getElementById('warningCount').textContent = `Warnings: ${warningCount}/2`;
+            document.getElementById('warningCount').classList.add(warningCount === 1 ? 'warning-1' : 'warning-2');
+            
+            document.getElementById('warningMessage').textContent = message;
+            document.getElementById('warningModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+
+            if (warningCount >= 2) {
+                endTest();
+            }
+        }
+
+        // Close warning function
+        function closeWarning() {
+            document.getElementById('warningModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // End test function
+        function endTest() {
+            isTestActive = false;
+            editor.setOption('readOnly', true);
+            document.getElementById('warningModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('warningMessage').textContent = "Test ended due to multiple warnings. Your code will be submitted for evaluation.";
+            
+            // Disable all buttons
+            document.querySelectorAll('.action-button').forEach(button => {
+                button.disabled = true;
+            });
+
+            // Automatically submit the code
+            setTimeout(() => {
+                evaluateSolution();
+            }, 2000);
+        }
+
+        // Set default code based on language
+        const defaultCode = {
+            python: `# Write your Python code here
+def main():
+    print("Hello, World!")
+
+if __name__ == "__main__":
+    main()`
+        };
+
+        // Handle language change
+        document.getElementById("language").addEventListener("change", function() {
+            const language = this.value;
+            editor.setOption("mode", "python");
+            editor.setValue(defaultCode[language]);
+        });
+
+        // Set initial code
+        editor.setValue(defaultCode.python);
+
+        function clearCode() {
+            const language = document.getElementById("language").value;
+            editor.setValue(defaultCode[language]);
+            document.getElementById("output").innerHTML = "";
+        }
+
+        async function runCode() {
+            if (!isTestActive) {
+                showWarning("Test has ended. You cannot run code anymore.");
+                return;
+            }
+            const code = editor.getValue();
+            const language = document.getElementById("language").value;
+            const outputDiv = document.getElementById("output");
+            
+            outputDiv.innerHTML = '<div class="loading">Running code...</div>';
+
+            try {
+                const response = await fetch("/run_code", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        language: language
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'An error occurred');
+                }
+
+                outputDiv.innerHTML = `<pre class="success-output">${data.output}</pre>`;
+            } catch (error) {
+                outputDiv.innerHTML = `<pre class="error-output">Error: ${error.message}</pre>`;
+            }
+        }
+
+        async function generateProblem() {
+            const topic = document.getElementById("topic").value.trim();
+            const problemContent = document.getElementById("problemContent");
+
+            if (!topic) {
+                problemContent.innerHTML = '<p class="error">❌ Please enter a topic.</p>';
+                return;
+            }
+
+            problemContent.innerHTML = '<p>🔍 Generating problem statement...</p>';
+
+            try {
+                const response = await fetch("/generate_problem", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ topic })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'An error occurred');
+                }
+
+                const formattedProblem = data.problem
+                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                    .replace(/\n/g, '<br>');
+
+                problemContent.innerHTML = formattedProblem;
+            } catch (error) {
+                console.error("Error:", error);
+                problemContent.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function evaluateSolution() {
+            if (!isTestActive) {
+                showWarning("Test has ended. Your code has been submitted.");
+                return;
+            }
+
+            const code = editor.getValue();
+            const language = document.getElementById("language").value;
+            const evaluationContent = document.getElementById("evaluationContent");
+            const solutionButton = document.getElementById("solutionButton");
+            const solutionContent = document.getElementById("solutionContent");
+
+            if (!code) {
+                evaluationContent.innerHTML = '<p class="error">❌ Please write some code first.</p>';
+                return;
+            }
+
+            evaluationContent.innerHTML = '<p>🔍 Evaluating your solution...</p>';
+            solutionContent.style.display = 'none';
+
+            try {
+                // First run the code to get output
+                const runResponse = await fetch("/run_code", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        language: language
+                    })
+                });
+
+                const runData = await runResponse.json();
+                
+                if (!runResponse.ok) {
+                    throw new Error(runData.error || 'An error occurred while running the code');
+                }
+
+                // Then evaluate the code output
+                const evalResponse = await fetch("/evaluate_code", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        language: language,
+                        output: runData.output,
+                        attempt: wrongAttempts + 1
+                    })
+                });
+
+                const evalData = await evalResponse.json();
+                
+                if (!evalResponse.ok) {
+                    throw new Error(evalData.error || 'An error occurred during evaluation');
+                }
+
+                // Format the output section
+                const outputSection = `
+                    <div class="output-section">
+                        <h3>Your Code Output:</h3>
+                        <pre class="output">${runData.output}</pre>
+                    </div>
+                `;
+
+                // Format the evaluation section without solution code
+                const evaluationSection = `
+                    <div class="evaluation-section">
+                        <h3>Evaluation:</h3>
+                        <div class="evaluation-content">
+                            ${evalData.evaluation.split('\n')
+                                .filter(line => !line.includes('```') && !line.includes('def ') && !line.includes('import '))
+                                .map(line => `<p>${line}</p>`)
+                                .join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Show attempt count
+                const attemptInfo = `
+                    <div class="attempt-info">
+                        <p>Attempt ${wrongAttempts + 1} of 3</p>
+                    </div>
+                `;
+
+                evaluationContent.innerHTML = outputSection + attemptInfo + evaluationSection;
+
+                // Increment wrong attempts counter
+                wrongAttempts++;
+
+                // Update solution button after 3 attempts
+                if (wrongAttempts >= 3) {
+                    solutionButton.style.display = 'block';
+                    solutionButton.classList.add('enabled');
+                    solutionButton.disabled = false;
+                    isSolutionEnabled = true;
+                } else {
+                    solutionButton.style.display = 'none';
+                    solutionButton.classList.remove('enabled');
+                    solutionButton.disabled = true;
+                    isSolutionEnabled = false;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                evaluationContent.innerHTML = `
+                    <div class="error-output">
+                        <h3>Error:</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function showSolution() {
+            if (!isSolutionEnabled) {
+                return;
+            }
+            
+            const solutionContent = document.getElementById("solutionContent");
+            if (!currentSolution) {
+                try {
+                    const response = await fetch("/get_solution", {
+                        method: "GET"
+                    });
+
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'An error occurred');
+                    }
+
+                    currentSolution = data.solution;
+                } catch (error) {
+                    console.error("Error:", error);
+                    return;
+                }
+            }
+
+            solutionContent.innerHTML = `
+                <h3>Official Solution:</h3>
+                <div class="solution-text">
+                    ${currentSolution.split('\n').map(line => `<p>${line}</p>`).join('')}
+                </div>
+            `;
+            solutionContent.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

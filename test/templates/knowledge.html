@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Knowledge Assistant</title>
+    <style>
+    .code-editor {
+        width: 100%;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        padding: 15px;
+        border: 2px solid #D8BFD8;
+        border-radius: 8px;
+        background: #FFFFFF;
+        color: #4B0082;
+        resize: vertical;
+        min-height: 200px;
+    }
+
+    .code-editor:focus {
+        outline: none;
+        border-color: #9370DB;
+        box-shadow: 0 0 10px rgba(147, 112, 219, 0.2);
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .nav-icon {
+      position: absolute;
+      left: 0;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="/" class="nav-icon" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <h1>🧠 Knowledge Assistant</h1>
+        </div>
+
+        <p>Ask questions about various subjects and get detailed answers!</p>
+
+        <div class="section">
+            <h2>Select Subject</h2>
+            <form method="POST" class="input-section">
+                <div class="form-group">
+                    <label for="subject">Choose a subject:</label>
+                    <select id="subject" name="subject" required>
+                        <option value="bigdata">Big Data Analytics</option>
+                        <option value="deeplearning">Deep Learning</option>
+                        <option value="machinelearning">Machine Learning</option>
+                        <option value="TSA">Text & Speech Analysis</option>
+                        <option value="FDSA">Fundamentals of Data Science & Analytics</option>
+                        <option value="MDA">Multivariate Data Analysis</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="question">Your Question:</label>
+                    <textarea id="question" name="question" rows="4" placeholder="Type your question here..." required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">🔍 Get Answer</button>
+            </form>
+        </div>
+
+        {% if error %}
+        <div class="error-box">
+            <p class="error">{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if response %}
+        <div class="section">
+            <h2>Answer</h2>
+            <div class="response-box">
+                <div class="response-content">
+                    {{ response | safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

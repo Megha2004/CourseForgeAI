@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        :root {
+            --primary-color: #9370DB;
+            --primary-dark: #8A2BE2;
+            --secondary-color: #D8BFD8;
+            --text-color: #9370DB;
+            --light-gray: #E6E6FA;
+            --border-color: #D8BFD8;
+            --shadow: 0 4px 12px rgba(147, 112, 219, 0.2);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #E6E6FA;
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .nav-icon {
+            position: absolute;
+            left: 0;
+            font-size: 24px;
+            color: #4B0082;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-icon:hover {
+            color: #9370DB;
+        }
+        
+        h1 {
+            color: #4B0082;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .nav-link {
+            padding: 10px 20px;
+            margin: 0 5px;
+            text-decoration: none;
+            color: var(--text-color);
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        
+        .nav-link:hover {
+            background: var(--light-gray);
+        }
+        
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .flashcards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .flashcard {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            perspective: 1500px;
+            height: 180px;
+            position: relative;
+            transform-style: preserve-3d;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .flashcard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(147, 112, 219, 0.2);
+        }
+        
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            overflow: auto;
+            box-sizing: border-box;
+        }
+        
+        .flashcard-front {
+            background: linear-gradient(135deg, #ffffff, #E6E6FA);
+            border: 1px solid var(--border-color);
+        }
+        
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #D8BFD8, #E6E6FA);
+            border: 1px solid #9370DB;
+        }
+        
+        .flashcard-front p, .flashcard-back p {
+            font-size: 1rem;
+            line-height: 1.4;
+            margin: 0;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .flashcard-front p {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .flashcard-back p {
+            color: #9370DB;
+        }
+        
+        .settings-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        
+        .settings-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .settings-section select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+        
+        .settings-section select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(147, 112, 219, 0.2);
+        }
+        
+        .upload-section {
+            border: 2px dashed var(--border-color);
+            padding: 40px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow);
+        }
+        
+        .upload-section:hover {
+            border-color: var(--primary-color);
+            background: var(--light-gray);
+        }
+        
+        .upload-section.dragover {
+            border-color: var(--primary-color);
+            background: #D8BFD8;
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .upload-section p {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin: 0;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #E6E6FA;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        .loading p {
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background-color: #FCE4EC;
+            color: #C2185B;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(45deg, #9370DB, #8A2BE2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 112, 219, 0.3);
+            background: linear-gradient(45deg, #8A2BE2, #9370DB);
+        }
+        
+        .generate-btn i {
+            margin-right: 8px;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        
+        @media (max-width: 768px) {
+            .flashcards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-link {
+                margin: 5px 0;
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="/" class="nav-icon" title="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <h1>📚 Flashcard Generator</h1>
+        </div>
+
+        <p>Upload a PDF to generate flashcards for effective learning</p>
+        
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+        
+        <form action="/flashcards" method="post" enctype="multipart/form-data" id="flashcardForm">
+            <div class="settings-section">
+                <label for="num_cards">Number of Flashcards:</label>
+                <select name="num_cards" id="num_cards">
+                    <option value="5">5 Flashcards</option>
+                    <option value="10" selected>10 Flashcards</option>
+                    <option value="15">15 Flashcards</option>
+                    <option value="20">20 Flashcards</option>
+                </select>
+            </div>
+            
+            <div class="upload-section" id="dropArea">
+                <input type="file" name="file" id="fileInput" accept=".pdf">
+                <i class="fas fa-file-pdf upload-icon"></i>
+                <p>Drag & drop your PDF here or click to browse</p>
+                <p class="file-name" id="fileName"></p>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generating flashcards... This may take a moment.</p>
+            </div>
+            
+            <button type="submit" class="generate-btn" id="generateBtn">
+                <i class="fas fa-magic"></i>
+                Generate Flashcards
+            </button>
+        </form>
+        
+        {% if flashcards %}
+        <div class="flashcards-container">
+            {% for flashcard in flashcards %}
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                <div class="flashcard-front">
+                    <p>{{ flashcard.question }}</p>
+                </div>
+                <div class="flashcard-back">
+                    <p>{{ flashcard.answer }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            const flashcardForm = document.getElementById('flashcardForm');
+            const loading = document.getElementById('loading');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('dragover');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('dragover');
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    updateFileName();
+                }
+            }
+            
+            dropArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', updateFileName);
+            
+            function updateFileName() {
+                if (fileInput.files.length > 0) {
+                    fileName.textContent = fileInput.files[0].name;
+                } else {
+                    fileName.textContent = '';
+                }
+            }
+            
+            // Show loading spinner only when form is submitted
+            flashcardForm.addEventListener('submit', function() {
+                if (fileInput.files.length > 0) {
+                    loading.style.display = 'block';
+                    generateBtn.disabled = true;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
